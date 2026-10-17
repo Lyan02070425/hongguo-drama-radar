@@ -1,0 +1,47 @@
+# 短剧雷达配置。改完提交到 main 分支，下一次定时任务生效。
+
+[general]
+timezone_offset_hours = 8   # 北京时间
+batch_cutoff_hour = 9       # 北京时间这个钟点之前抓到的数据算前一天的批次（官方约 10 点刷新）
+history_window_days = 400   # 分析时最多读取多少天的快照
+site_title = "短剧雷达"
+# 额外的插件模块（数据源、分析器、报告器），写 Python 模块路径，如 "plugins.my_source"
+plugins = []
+
+[sources.hongguo]
+enabled = true
+base_url = "https://hongguoduanju.com"
+boards = ["hot", "real", "ai", "comic"]
+max_pages = 5                    # 每个榜最多抓几页（每页 20 部）
+min_items_per_board = 80         # 少于这个数认为抓取异常，本次不写快照
+request_interval_seconds = 1.0   # 相邻两次请求的最小间隔，别调太小
+timeout_seconds = 20
+fetch_details = true             # 抓详情页：精确热度、评分人数、评论数、集数、上线时间
+max_detail_failure_ratio = 0.10  # 详情页失败超过这个比例，本次不写快照
+track_dropped_days = 14          # 掉榜后继续追踪多少天
+# 如实标明身份，方便对方识别。部署后把地址换成你的仓库地址。
+user_agent = "drama-radar/0.1 (+https://github.com/SentDz/drama-radar; public ranking research)"
+
+# 观察列表：不在榜上也每天追踪。写剧名或红果链接都可以。
+watchlist = [
+  # "首辅娇娘",
+  # "https://hongguoduanju.com/detail?series_id=7686713195246930968",
+]
+
+[analysis]
+top_n = 50                  # 飙升榜等列表保留前多少名
+new_drama_max_age_days = 7  # 上线不超过这么多天算新剧（短剧更新快，默认一周）
+tag_momentum_days = 7       # 题材动量：和 N 天前比
+min_tag_count = 3           # 题材至少出现在这么多部剧上才进题材排行
+min_heat_for_rate = 5000000 # 计算热度增长率时，昨天热度至少要这么高，避免小基数虚高
+format_tags = ["漫剧", "AI剧", "真人剧", "短剧"]  # 形式标签，不算题材
+disabled = []               # 不想运行的分析器，如 ["lifecycle"]
+
+[analysis.potential_weights] # 潜力分各项权重，会自动归一化
+fav_growth = 0.35
+heat_growth_rate = 0.25
+rank_climb = 0.20
+rating = 0.20
+
+[reporters.markdown]
+enabled = true              # 每天生成一份 Markdown 简报，放在 reports/ 下
