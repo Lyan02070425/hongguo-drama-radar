@@ -68,10 +68,12 @@ class HongguoSource(Source):
 
         errors: List[Dict[str, str]] = []
         watch = self._resolve_watchlist(errors)
-        tracked = self._tracked_ids(list_items, watch, batch)
-        details = self._collect_details(tracked, errors) if self.settings.get("fetch_details", True) else {}
-
         catalog = self.store.load_catalog()
+        tracked = self._tracked_ids(list_items, watch, batch, catalog)
+        removed: List[str] = []
+        details = self._collect_details(tracked, errors, removed) if self.settings.get("fetch_details", True) else {}
+        # 详情页 404 = 作品已下架：不在榜上的就不再写进快照，以后也不再追踪
+        tracked = [sid for sid in tracked if sid not in removed or sid in list_items]
         items = self._merge(tracked, list_items, details, catalog, boards)
         snapshot = {
             "schema": SCHEMA_VERSION,
@@ -83,11 +85,17 @@ class HongguoSource(Source):
             "items": items,
             "watchlist": watch,
             "errors": errors,
+            "removed": removed,
             "requests": self.fetcher.requests,
         }
+        for sid in removed:
+            if sid in catalog:
+                catalog[sid]["removed_on"] = batch
         self._update_catalog(catalog, items, list_items, details, boards, batch)
         self.store.save_catalog(catalog)
         msg = f"{len(items)} 部剧，{sum(len(b['items']) for b in boards.values())} 个榜单条目，{self.fetcher.requests} 次请求"
+        if removed:
+            msg += f"，{len(removed)} 部已下架"
         if errors:
             msg += f"，{len(errors)} 个错误"
         return CollectResult("new", snapshot, msg)
@@ -154,9 +162,10 @@ class HongguoSource(Source):
         return True
 
     # ---- 追踪集合 ----
-    def _tracked_ids(self, list_items: Dict[str, Any], watch: List[Dict[str, Any]], batch: str) -> List[str]:
-        tracked: Set[str] = set(list_items)
-        tracked.update(w["id"] for w in watch if w.get("id"))
+    def _tracked_ids(self, list_items: Dict[str, Any], watch: List[Dict[str, Any]], batch: str,
+                     catalog: Optional[Dict[str, Any]] = None) -> List[str]:
+        catalog = catalog or {}
+        dropped: Set[str] = set()
         keep_days = int(self.settings.get("track_dropped_days", 14))
         for day in reversed(self.store.dates()):
             if day >= batch:
@@ -165,8 +174,10 @@ class HongguoSource(Source):
                 break
             snap = self.store.load(day) or {}
             for data in (snap.get("boards") or {}).values():
-                tracked.update(x["id"] for x in data.get("items", []))
-        return sorted(tracked)
+                dropped.update(x["id"] for x in data.get("items", []))
+        extra = dropped | {w["id"] for w in watch if w.get("id")}
+        extra = {sid for sid in extra if not (catalog.get(sid) or {}).get("removed_on")}
+        return sorted(set(list_items) | extra)
 
     def _resolve_watchlist(self, errors: List[Dict[str, str]]) -> List[Dict[str, Any]]:
         entries = [str(e).strip() for e in self.settings.get("watchlist", []) if str(e).strip()]
@@ -197,14 +208,21 @@ class HongguoSource(Source):
         return out
 
     # ---- 详情 ----
-    def _collect_details(self, ids: List[str], errors: List[Dict[str, str]]) -> Dict[str, Dict[str, Any]]:
+    def _collect_details(self, ids: List[str], errors: List[Dict[str, str]], removed: Optional[List[str]] = None) -> Dict[str, Dict[str, Any]]:
         details: Dict[str, Dict[str, Any]] = {}
         failed = 0
+        removed = removed if removed is not None else []
         self.log(f"  抓取 {len(ids)} 部剧的详情页…")
         for i, sid in enumerate(ids, 1):
             try:
                 details[sid] = parse_detail_page(self.fetcher.get(self.item_url(sid)), self.config.tz_offset)
-            except (FetchError, ParseError) as exc:
+            except FetchError as exc:
+                if "HTTP 404" in str(exc):
+                    removed.append(sid)  # 已下架，不算采集失败
+                else:
+                    failed += 1
+                    errors.append({"stage": "detail", "id": sid, "message": str(exc)})
+            except ParseError as exc:
                 failed += 1
                 errors.append({"stage": "detail", "id": sid, "message": str(exc)})
             if i % 50 == 0:

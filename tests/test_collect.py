@@ -11,11 +11,13 @@ DETAIL = fixture("hongguo_detail.html")
 SEARCH = fixture("hongguo_search.html")
 
 
-def make_opener(calls, fail_rank=False):
+def make_opener(calls, fail_rank=False, gone=()):
     def opener(url, headers, timeout):
         calls.append((url, headers["User-Agent"]))
         if "/rank/" in url:
             return (500, {}, b"") if fail_rank else (200, {}, RANK.encode("utf-8"))
+        if "/detail" in url and any(g in url for g in gone):
+            return 404, {}, b""
         if "/detail" in url:
             return 200, {}, DETAIL.encode("utf-8")
         if "/search/" in url:
@@ -62,6 +64,19 @@ class TestCollect(unittest.TestCase):
         forced = source.collect("2026-10-18", allow_stale=True)
         self.assertEqual(forced.status, "new")
         self.assertTrue(forced.snapshot["stale"])
+
+    def test_removed_drama_is_not_an_error(self):
+        watched = "7686713195246930968"  # 观察列表里、不在榜上的剧；详情页 404 = 已下架
+        source, store = make_source(self.config, self.calls, gone=(watched,))
+        result = source.collect("2026-10-17")
+        self.assertEqual(result.snapshot["removed"], [watched])
+        self.assertEqual(result.snapshot["errors"], [])
+        self.assertNotIn(watched, result.snapshot["items"])
+        store.save(result.snapshot)
+        catalog = store.load_catalog()
+        catalog[watched] = {"title": "首辅娇娘", "removed_on": "2026-10-17"}
+        store.save_catalog(catalog)
+        self.assertNotIn(watched, source._tracked_ids({}, [{"id": watched}], "2026-10-18", catalog))
 
     def test_rank_failure_raises(self):
         source, _ = make_source(self.config, self.calls, fail_rank=True)
