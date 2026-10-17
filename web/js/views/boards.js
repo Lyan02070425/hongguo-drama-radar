@@ -7,6 +7,7 @@ import * as ui from "../lib/ui.js";
 export default {
   id: "boards",
   title: "榜单",
+  icon: "boards",
   async render(root, app) {
     const data = await app.data.get("boards");
     const boardIds = Object.keys(data.boards);
@@ -45,17 +46,17 @@ export default {
       const b = data.boards[board];
       const s = b.summary;
       clear(summary).append(
-        ui.kpi("榜单日期", fmt.shortDate(b.date), b.prev_date ? `对比 ${fmt.shortDate(b.prev_date)}` : "第一期，没有对比"),
-        ui.kpi("新上榜 / 回榜 / 掉榜", `${s.new_entries} / ${s.back_entries} / ${s.dropped}`),
-        ui.kpi("新剧数", String(s.new_dramas), s.median_age !== null ? `上线天数中位数 ${s.median_age} 天` : null),
-        ui.kpi("热门题材", s.top_tags.slice(0, 3).join("、") || "—", null, { small: true }),
+        ui.kpi("榜单日期", fmt.shortDate(b.date), b.prev_date ? `对比 ${fmt.shortDate(b.prev_date)}` : "第一期，没有对比", { icon: "clock" }),
+        ui.kpi("新上榜 / 回榜 / 掉榜", `${s.new_entries} / ${s.back_entries} / ${s.dropped}`, null, { icon: "zap" }),
+        ui.kpi("新剧数", String(s.new_dramas), s.median_age !== null ? `上线天数中位数 ${s.median_age} 天` : null, { icon: "potential", tone: "up" }),
+        ui.kpi("热门题材", s.top_tags.slice(0, 3).join("、") || "—", null, { small: true, icon: "tags", tone: "accent" }),
       );
       let rows = b.rows;
       if (query) rows = rows.filter((r) => (r.title || "").includes(query));
       if (tag) rows = rows.filter((r) => (r.tags || []).includes(tag));
       if (onlyNew) rows = rows.filter((r) => r.is_new);
       clear(body).append(ui.card(`${b.label} · ${rows.length} 部`, null, ui.table([
-        { key: "rank", label: "名次", num: true, render: (r) => h("span", { class: "rank" }, r.rank) },
+        { key: "rank", label: "名次", num: true, render: (r) => ui.rankPill(r.rank) },
         { key: "delta", label: "变化", num: true, render: (r) => ui.delta(r.delta) },
         { key: "title", label: "剧名", render: (r) => ui.titleCell(app, r) },
         { key: "heat", label: "热度", num: true, render: (r) => fmt.count(r.heat) },
@@ -67,6 +68,7 @@ export default {
         { key: "best", label: "最好名次", num: true },
         { key: "age_days", label: "上线天数", num: true, render: (r) => fmt.days(r.age_days) },
         { key: "episodes", label: "集数", num: true },
+        { key: "kind", label: "类型", render: (r) => ui.kindBadge(r.kind) },
         { key: "tags", label: "题材", sortable: false, render: (r) => ui.tagChips(r.tags, (t) => { tag = t; fillTags(); app.setParams({ tag: t }); draw(); }) },
       ], rows, { sortKey: "rank", sortDir: "asc", emptyText: "没有符合条件的剧" })));
       if (b.dropped.length) {

@@ -6,6 +6,7 @@ import * as ui from "../lib/ui.js";
 export default {
   id: "data",
   title: "数据下载",
+  icon: "data",
   async render(root, app) {
     const [exportsInfo, status] = await Promise.all([app.data.get("exports"), app.data.get("status")]);
     root.append(ui.pageHead("数据下载", "长表格式的 CSV（UTF-8 带 BOM，Excel 直接打开不乱码），可以拿去做自己的分析。"));

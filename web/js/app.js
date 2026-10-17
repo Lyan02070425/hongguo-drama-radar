@@ -6,6 +6,7 @@ import * as charts from "./lib/charts.js";
 import * as fmt from "./lib/format.js";
 import { VIEWS } from "./views/index.js";
 import { openDrama, closeDrama } from "./drama.js";
+import { icon } from "./lib/icons.js";
 
 const store = {
   get(key) { try { return localStorage.getItem(key); } catch { return null; } },
@@ -47,7 +48,7 @@ function renderNav(active) {
   const nav = document.getElementById("nav");
   clear(nav);
   for (const v of VIEWS) {
-    nav.append(h("a", { href: `#/${v.id}`, "aria-current": v.id === active ? "page" : null }, v.title));
+    nav.append(h("a", { href: `#/${v.id}`, "aria-current": v.id === active ? "page" : null }, icon(v.icon || "overview"), h("span", {}, v.title)));
   }
 }
 
@@ -55,18 +56,20 @@ async function renderStatus() {
   const el = document.getElementById("status");
   clear(el);
   if (!app.source?.latest_date) {
-    el.append("还没有数据");
+    el.append(h("span", { class: "pill" }, "还没有数据"));
     return;
   }
+  const pill = (text, cls = "") => h("span", { class: `pill ${cls}`.trim() }, text);
   try {
     const s = await app.data.get("status");
-    el.append(`${s.label} · 数据日期 ${s.latest_date} · 已积累 ${s.history_days} 天 · 追踪 ${s.tracked} 部`);
-    if (s.stale) el.append(h("span", { class: "warn" }, " · 官方今天未刷新"));
-    if (s.error_count) el.append(h("span", { class: "warn" }, ` · ${s.error_count} 个采集错误`));
+    el.append(pill(`${s.label} · ${s.latest_date}`, "live"), pill(`已积累 ${s.history_days} 天`), pill(`追踪 ${s.tracked} 部`));
+    if (s.stale) el.append(pill("官方今天未刷新", "warn"));
+    if (s.error_count) el.append(pill(`${s.error_count} 个采集错误`, "warn"));
   } catch {
-    el.append(`${app.source.label} · 数据日期 ${app.source.latest_date}`);
+    el.append(pill(`${app.source.label} · ${app.source.latest_date}`, "live"));
   }
-  document.getElementById("footer-meta").textContent = `页面生成于 ${app.manifest.generated_at.replace("T", " ").replace("Z", " UTC")}。`;
+  document.getElementById("brand-sub").textContent = `${app.source.label} · 每日更新`;
+  document.getElementById("footer-meta").textContent = `页面生成于 ${app.manifest.generated_at.replace("T", " ").replace("Z", " UTC")}`;
 }
 
 async function route() {
@@ -93,24 +96,34 @@ async function route() {
   if (dramaId) openDrama(app, dramaId);
 }
 
+function isDark() {
+  const forced = document.documentElement.dataset.theme;
+  return forced ? forced === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+}
+
 function setupTheme() {
   const btn = document.getElementById("theme-toggle");
   const saved = store.get("theme");
   if (saved) document.documentElement.dataset.theme = saved;
+  const paint = () => {
+    clear(btn).append(icon(isDark() ? "sun" : "moon"));
+    btn.setAttribute("aria-label", isDark() ? "切换到浅色" : "切换到深色");
+    btn.title = btn.getAttribute("aria-label");
+  };
+  paint();
   btn.addEventListener("click", () => {
-    const dark = document.documentElement.dataset.theme
-      ? document.documentElement.dataset.theme === "dark"
-      : matchMedia("(prefers-color-scheme: dark)").matches;
-    const next = dark ? "light" : "dark";
+    const next = isDark() ? "light" : "dark";
     document.documentElement.dataset.theme = next;
     store.set("theme", next);
+    paint();
     charts.rerenderAll();
   });
-  matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => charts.rerenderAll());
+  matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => { paint(); charts.rerenderAll(); });
 }
 
 async function main() {
   setupTheme();
+  document.getElementById("drawer-close").append(icon("close"));
   document.getElementById("drawer-close").addEventListener("click", closeDrama);
   document.getElementById("drawer-backdrop").addEventListener("click", closeDrama);
   document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeDrama(); });

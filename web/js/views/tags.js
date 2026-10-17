@@ -30,6 +30,7 @@ function matrixTable(matrix) {
 export default {
   id: "tags",
   title: "题材",
+  icon: "tags",
   async render(root, app) {
     const [data, boards] = await Promise.all([app.data.get("tags"), app.data.get("boards")]);
     const boardIds = Object.keys(data.boards);
@@ -72,10 +73,10 @@ export default {
       const up = tb.rising[0];
       const supply = (data.new_vs_all || [])[0];
       body.append(h("div", { class: "grid cols-4" },
-        ui.kpi("热度最高的题材", top3 || "—", "按热度占比", { small: true }),
-        ui.kpi("升温最快", up ? up.tag : "—", up ? `${fmt.pp(up.momentum)} · ${up.count} 部` : baseline),
-        ui.kpi("新剧扎堆", supply ? supply.tag : "—", supply ? `新剧里占 ${fmt.pct(supply.share_new, 0)}，老剧里 ${fmt.pct(supply.share_old, 0)}` : "新剧太少，暂不判断"),
-        ui.kpi("参与统计的新剧", String(data.new_dramas), `上线天数不超过设定值或标注「新剧」`),
+        ui.kpi("热度最高的题材", top3 || "—", "按热度占比", { small: true, icon: "flame", tone: "accent" }),
+        ui.kpi("升温最快", up ? up.tag : "—", up ? `${fmt.pp(up.momentum)} · ${up.count} 部` : baseline, { icon: "movers", tone: "up" }),
+        ui.kpi("新剧扎堆", supply ? supply.tag : "—", supply ? `新剧里占 ${fmt.pct(supply.share_new, 0)}，老剧里 ${fmt.pct(supply.share_old, 0)}` : "新剧太少，暂不判断", { icon: "potential" }),
+        ui.kpi("参与统计的新剧", String(data.new_dramas), `上线天数不超过设定值或标注「新剧」`, { icon: "layers" }),
       ));
       if (focus) body.append(focusCard(tb));
 

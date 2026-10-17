@@ -78,6 +78,8 @@ class TestAnalysis(unittest.TestCase):
         self.assertEqual({i["id"] for i in items}, {"C", "D"})  # 上线不超过 14 天的两部；A 是老剧
         self.assertEqual(items[0]["id"], "C")  # 收藏、热度增速、名次都领先，只有评分不如 D
         self.assertEqual(items[0]["score"], 80.0)
+        self.assertEqual(sum(self.r["potential"]["by_kind"].values()), len(items))
+        self.assertEqual([i["kind_rank"] for i in items if i["kind"] == items[0]["kind"]][0], 1)
 
     def test_tags(self):
         hot = self.r["tags"]["boards"]["hot"]

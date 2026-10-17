@@ -4,7 +4,6 @@ import { h, clear } from "../lib/dom.js";
 import * as fmt from "../lib/format.js";
 import * as ui from "../lib/ui.js";
 
-const KIND_LABEL = { real: "真人", ai: "AI", comic: "漫剧", unknown: "未知" };
 
 function valueText(list, v) {
   if (list.unit === "%") return h("span", { class: fmt.trendClass(v) }, fmt.pct(v, 1, { signed: true }));
@@ -16,6 +15,7 @@ function valueText(list, v) {
 export default {
   id: "movers",
   title: "飙升",
+  icon: "movers",
   async render(root, app) {
     const data = await app.data.get("movers");
     const keys = Object.keys(data.lists);
@@ -45,7 +45,7 @@ export default {
         { key: "fav", label: "收藏", num: true, render: (r) => fmt.count(r.fav) },
         { key: "rating", label: "评分", num: true, render: (r) => fmt.rating(r.rating) },
         { key: "age_days", label: "上线天数", num: true, render: (r) => fmt.days(r.age_days) },
-        { key: "kind", label: "类型", render: (r) => KIND_LABEL[r.kind] || "—" },
+        { key: "kind", label: "类型", render: (r) => ui.kindBadge(r.kind) },
         { key: "tags", label: "题材", sortable: false, render: (r) => ui.tagChips(r.tags) },
       ], rows, { emptyText: data.prev_date ? "没有符合条件的剧" : "积累 2 天以上的数据后才有增量" })));
     }

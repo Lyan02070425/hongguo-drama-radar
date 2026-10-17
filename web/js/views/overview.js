@@ -6,7 +6,7 @@ import * as ui from "../lib/ui.js";
 import { lineChart } from "../lib/charts.js";
 
 function insightItem(app, item) {
-  const li = h("li", { class: item.kind === "note" ? "note" : "" }, h("span", { class: "dot", "aria-hidden": "true" }));
+  const li = h("li", { class: item.kind === "note" ? "note" : `k-${item.kind}` }, h("span", { class: "dot", "aria-hidden": "true" }));
   const text = h("span");
   if (item.id) {
     // 把句子里的《剧名》做成可点击的链接
@@ -27,6 +27,7 @@ function insightItem(app, item) {
 export default {
   id: "overview",
   title: "总览",
+  icon: "overview",
   async render(root, app) {
     const [insights, boards, movers, potential, lifecycle] = await Promise.all(
       ["insights", "boards", "movers", "potential", "lifecycle"].map((n) => app.data.get(n)),
@@ -39,10 +40,10 @@ export default {
 
     root.append(ui.pageHead(`${app.source.label} · ${fmt.shortDate(boards.date)}`, "每天官方榜单刷新后自动更新。点剧名看单剧走势，点题材跳到题材分析。"));
     root.append(h("div", { class: "grid cols-4" },
-      ui.kpi(`${b.label}第一`, top ? top.title : "—", top ? `热度 ${fmt.count(top.heat)}` : null, { small: true }),
-      ui.kpi("今日新上榜", String(b.summary.new_entries), boards.prev_date ? `回榜 ${b.summary.back_entries} · 掉榜 ${b.summary.dropped}` : "第二天起才有对比"),
-      ui.kpi(`${lifecycle.max_age_days} 天内新剧热度占比`, fmt.pct(newShare, 0), `${b.label}里 ${b.summary.new_dramas} 部新剧`),
-      ui.kpi(`${b.label}热门题材`, b.summary.top_tags.slice(0, 3).join("、") || "—", "按在榜部数", { small: true }),
+      ui.kpi(`${b.label}第一`, top ? top.title : "—", top ? `热度 ${fmt.count(top.heat)}` : null, { small: true, icon: "flame", tone: "accent" }),
+      ui.kpi("今日新上榜", String(b.summary.new_entries), boards.prev_date ? `回榜 ${b.summary.back_entries} · 掉榜 ${b.summary.dropped}` : "第二天起才有对比", { icon: "zap" }),
+      ui.kpi(`${lifecycle.max_age_days} 天内新剧热度占比`, fmt.pct(newShare, 0), `${b.label}里 ${b.summary.new_dramas} 部新剧`, { icon: "clock", tone: "up" }),
+      ui.kpi(`${b.label}热门题材`, b.summary.top_tags.slice(0, 3).join("、") || "—", "按在榜部数", { small: true, icon: "tags" }),
     ));
 
     const list = h("ul", { class: "insights" }, insights.items.map((i) => insightItem(app, i)));
@@ -59,6 +60,7 @@ export default {
       ], favRows, { emptyText: "第二天起才有增量数据" })),
       ui.card("潜力新剧", `上线 ${potential.max_age_days} 天内或新上榜的剧，按潜力分排序`, ui.table([
         { key: "title", label: "剧名", render: (r) => ui.dramaLink(app, r) },
+        { key: "kind", label: "类型", render: (r) => ui.kindBadge(r.kind) },
         { key: "score", label: "潜力分", num: true, render: (r) => ui.scoreBar(r.score) },
         { key: "reasons", label: "理由", sortable: false, render: (r) => r.reasons.join("；") },
       ], potRows)),

@@ -2,6 +2,9 @@
 
 import { h, clear } from "./dom.js";
 import * as fmt from "./format.js";
+import { icon } from "./icons.js";
+
+export const KIND_LABEL = { real: "真人", ai: "AI", comic: "漫剧", unknown: "其他" };
 
 export function card(title, sub, ...children) {
   return h("section", { class: "card" }, title ? h("h2", {}, title) : null, sub ? h("p", { class: "sub" }, sub) : null, ...children);
@@ -12,18 +15,32 @@ export function pageHead(title, desc) {
 }
 
 export function notice(text) {
-  return h("div", { class: "notice" }, text);
+  return h("div", { class: "notice" }, icon("info"), h("span", {}, text));
 }
 
 export function empty(text = "暂无数据") {
   return h("p", { class: "empty" }, text);
 }
 
-export function kpi(label, value, foot, { small = false } = {}) {
-  return h("div", { class: "card kpi" }, h("div", { class: "label" }, label), h("div", { class: "value" + (small ? " small" : "") }, value), foot ? h("div", { class: "foot" }, foot) : null);
+export function kpi(label, value, foot, { small = false, icon: iconName = "overview", tone = "" } = {}) {
+  return h("div", { class: `card kpi ${tone ? "tone-" + tone : ""}`.trim() },
+    h("div", { class: "kpi-icon" }, icon(iconName, { size: 20 })),
+    h("div", { class: "kpi-body" },
+      h("div", { class: "label" }, label),
+      h("div", { class: "value" + (small ? " small" : "") }, value),
+      foot ? h("div", { class: "foot" }, foot) : null));
 }
 
-// 分段按钮：options = [{value, label}]；onChange(value)
+export function kindBadge(kind) {
+  const k = KIND_LABEL[kind] ? kind : "unknown";
+  return h("span", { class: `chip kind kind-${k}` }, KIND_LABEL[k]);
+}
+
+export function rankPill(rank) {
+  return h("span", { class: rank <= 3 ? "rank top" : "rank" }, rank);
+}
+
+// 分段按钮：options = [{value, label, count?}]；onChange(value)
 export function segmented(options, current, onChange, label = "") {
   const wrap = h("div", { class: "seg", role: "group", "aria-label": label });
   const render = (active) => {
@@ -33,7 +50,7 @@ export function segmented(options, current, onChange, label = "") {
         type: "button",
         "aria-pressed": String(opt.value === active),
         onclick: () => { render(opt.value); onChange(opt.value); },
-      }, opt.label));
+      }, opt.label, opt.count !== undefined ? h("span", { class: "count" }, opt.count) : null));
     }
   };
   render(current);
@@ -77,7 +94,7 @@ export function titleCell(app, row, { withStatus = true } = {}) {
 }
 
 export function scoreBar(score) {
-  return h("div", { class: "score" }, h("b", {}, score.toFixed(0)), h("div", { class: "bar", role: "img", "aria-label": `潜力分 ${score.toFixed(0)}` }, h("span", { style: { width: `${Math.max(0, Math.min(100, score))}%` } })));
+  return h("div", { class: score >= 80 ? "score hot" : "score" }, h("b", {}, score.toFixed(0)), h("div", { class: "bar", role: "img", "aria-label": `潜力分 ${score.toFixed(0)}` }, h("span", { style: { width: `${Math.max(0, Math.min(100, score))}%` } })));
 }
 
 /**

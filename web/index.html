@@ -5,37 +5,51 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>短剧雷达</title>
   <meta name="description" content="每日追踪短剧平台官方榜单：热门剧、飙升剧、潜力新剧和题材趋势。">
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='13' fill='none' stroke='%232a78d6' stroke-width='3'/%3E%3Ccircle cx='16' cy='16' r='6' fill='none' stroke='%232a78d6' stroke-width='3'/%3E%3Cpath d='M16 16 L27 7' stroke='%23eb6834' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E">
+  <meta name="theme-color" content="#1e40af">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%231e40af'/%3E%3Ccircle cx='16' cy='16' r='9' fill='none' stroke='white' stroke-width='2.5'/%3E%3Ccircle cx='16' cy='16' r='3.5' fill='none' stroke='white' stroke-width='2.5'/%3E%3Cpath d='M16 16 L24 8' stroke='%23fbbf24' stroke-width='2.5' stroke-linecap='round'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fira+Sans:wght@400;500;600;700&display=swap">
   <link rel="stylesheet" href="css/style.css">
   <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.1/dist/echarts.min.js" defer></script>
   <script type="module" src="js/app.js"></script>
 </head>
 <body>
-  <header class="topbar">
-    <a class="brand" href="#/overview">
-      <svg class="logo" viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="13"/><circle cx="16" cy="16" r="6"/><path d="M16 16 L27 7"/></svg>
-      <span id="site-title">短剧雷达</span>
-    </a>
-    <div class="status" id="status" role="status"></div>
-    <div class="top-actions">
-      <label class="visually-hidden" for="source-select">数据源</label>
-      <select id="source-select" hidden></select>
-      <button id="theme-toggle" class="icon-btn" type="button" aria-label="切换深浅色" title="切换深浅色">◐</button>
+  <a class="skip-link" href="#view">跳到内容</a>
+  <div class="shell">
+    <aside class="sidebar">
+      <a class="brand" href="#/overview" aria-label="短剧雷达 首页">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 32 32"><circle cx="16" cy="16" r="9"/><circle cx="16" cy="16" r="3.5"/><path d="M16 16 L24 8"/></svg>
+        </span>
+        <span class="brand-text">
+          <span id="site-title">短剧雷达</span>
+          <span class="brand-sub" id="brand-sub">官方榜单 · 每日更新</span>
+        </span>
+      </a>
+      <nav class="nav" id="nav" aria-label="页面"></nav>
+      <div class="sidebar-foot" id="footer-meta"></div>
+    </aside>
+    <div class="main-col">
+      <header class="topbar">
+        <div class="status" id="status" role="status"></div>
+        <div class="top-actions">
+          <label class="visually-hidden" for="source-select">数据源</label>
+          <select id="source-select" hidden></select>
+          <button id="theme-toggle" class="icon-btn" type="button" aria-label="切换深浅色" title="切换深浅色"></button>
+        </div>
+      </header>
+      <main id="view" tabindex="-1"><p class="empty">加载中…</p></main>
+      <footer class="footer">数据来自官方公开榜单，每天自动更新一次，仅供研究参考。</footer>
     </div>
-  </header>
-  <nav class="tabs" id="nav" aria-label="页面"></nav>
-  <main id="view" tabindex="-1"><p class="empty">加载中…</p></main>
+  </div>
   <div id="drawer-backdrop" class="backdrop" hidden></div>
-  <aside id="drawer" class="drawer" hidden aria-label="剧集详情" aria-modal="true" role="dialog">
+  <aside id="drawer" class="drawer" hidden aria-labelledby="drawer-title" aria-modal="true" role="dialog">
     <div class="drawer-head">
       <h2 id="drawer-title">剧集详情</h2>
-      <button id="drawer-close" class="icon-btn" type="button" aria-label="关闭">✕</button>
+      <button id="drawer-close" class="icon-btn" type="button" aria-label="关闭"></button>
     </div>
     <div id="drawer-body" class="drawer-body"></div>
   </aside>
-  <footer class="footer">
-    数据来自官方公开榜单，每天自动更新一次，仅供研究参考。
-    <span id="footer-meta"></span>
-  </footer>
 </body>
 </html>

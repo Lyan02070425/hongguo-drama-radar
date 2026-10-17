@@ -4,6 +4,7 @@ import { h, clear } from "./lib/dom.js";
 import * as fmt from "./lib/format.js";
 import * as ui from "./lib/ui.js";
 import { lineChart } from "./lib/charts.js";
+import { icon } from "./lib/icons.js";
 
 let current = null;
 let appRef = null;
@@ -55,7 +56,7 @@ export async function openDrama(app, id) {
   const adaptation = meta.adaptation ? `${meta.adaptation.platform}《${meta.adaptation.work}》${meta.adaptation.author ? "，" + meta.adaptation.author : ""}` : "未注明";
 
   body.append(
-    h("div", { class: "tags" }, ui.tagChips(meta.tags), latest.is_new ? h("span", { class: "chip fresh" }, "新剧") : null),
+    h("div", { class: "tags" }, latest.kind ? ui.kindBadge(latest.kind) : null, ui.tagChips(meta.tags), latest.is_new ? h("span", { class: "chip fresh" }, "新剧") : null),
     h("dl", { class: "meta-list" },
       metaItem("今天名次", ranks),
       metaItem("历史最好", best),
@@ -72,7 +73,7 @@ export async function openDrama(app, id) {
       metaItem("首次采集到", meta.first_seen),
       metaItem("演员", (meta.cast || []).join("、") || "—"),
     ),
-    rec.url ? h("p", {}, h("a", { href: rec.url, target: "_blank", rel: "noopener" }, "在官网查看 ↗")) : null,
+    rec.url ? h("p", {}, h("a", { class: "ext-link", href: rec.url, target: "_blank", rel: "noopener" }, "在官网查看", icon("external", { size: 16 }))) : null,
     meta.synopsis ? h("p", { class: "synopsis" }, meta.synopsis) : null,
   );
 

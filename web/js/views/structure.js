@@ -8,6 +8,7 @@ import { barChart, disposeAll } from "../lib/charts.js";
 export default {
   id: "structure",
   title: "内容结构",
+  icon: "structure",
   async render(root, app) {
     const data = await app.data.get("lifecycle");
     const boardIds = Object.keys(data.boards);

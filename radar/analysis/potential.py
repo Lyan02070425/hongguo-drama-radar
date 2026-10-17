@@ -60,12 +60,20 @@ def potential(ctx) -> Dict[str, Any]:
         )
         items.append(item)
     items.sort(key=lambda x: x["score"], reverse=True)
+    # 按类型（真人 / AI / 漫剧）各自排名，看板可以按类型筛选或分组对比。
+    # 分数仍是在全部候选里算的百分位，所以不同类型之间可以直接比较。
+    by_kind: Dict[str, int] = {}
+    for item in items:
+        kind = item.get("kind") or "unknown"
+        by_kind[kind] = by_kind.get(kind, 0) + 1
+        item["kind_rank"] = by_kind[kind]
     available = [c for c in weights if pcts[c]]
     return {
         "date": m["date"],
         "weights": weights,
         "components_available": available,
         "candidates": len(candidates),
+        "by_kind": by_kind,
         "max_age_days": int(ctx.params.get("new_drama_max_age_days", 7)),
-        "items": items[: int(ctx.params.get("top_n", 50))],
+        "items": items,  # 全部候选（通常一两百部），前端自己截取
     }

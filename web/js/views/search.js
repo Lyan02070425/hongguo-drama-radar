@@ -7,6 +7,7 @@ import * as ui from "../lib/ui.js";
 export default {
   id: "search",
   title: "剧集库",
+  icon: "search",
   async render(root, app) {
     const data = await app.data.get("dramas");
     let query = app.params.get("q") || "";
