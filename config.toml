@@ -20,7 +20,7 @@ fetch_details = true             # 抓详情页：精确热度、评分人数、
 max_detail_failure_ratio = 0.10  # 详情页失败超过这个比例，本次不写快照
 track_dropped_days = 14          # 掉榜后继续追踪多少天
 # 如实标明身份，方便对方识别。部署后把地址换成你的仓库地址。
-user_agent = "drama-radar/0.1 (+https://github.com/SentDz/drama-radar; public ranking research)"
+user_agent = "drama-radar/0.1 (+https://github.com/Lyan02070425/hongguo-drama-radar; public ranking research)"
 
 # 观察列表：不在榜上也每天追踪。写剧名或红果链接都可以。
 watchlist = [
